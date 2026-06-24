@@ -10,7 +10,7 @@
     "build": "npm run build:frontend",
     "build:frontend": "cd frontend && npm run build",
     "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
-    "start:backend": "cd backend && npm start",
+    "start:backend": "cd backend && BACKEND_PORT=4000 node src/index.js",
     "start:frontend": "cd frontend && npm start"
   },
   "dependencies": {
