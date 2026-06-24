@@ -5,6 +5,7 @@ const { initialize } = require('./config/database');
 const { PORT } = require('./config/env');
 const routes = require('./routes');
 const { errorHandler } = require('./middleware/errorHandler');
+const UserModel = require('./models/user.model');
 
 const app = express();
 
@@ -24,6 +25,14 @@ app.get('/.well-known/*', (_req, res) => res.status(204).end());
 app.use(errorHandler);
 
 initialize();
+
+const existing = UserModel.findByUsername('andrew');
+if (!existing) {
+  UserModel.create({ username: 'andrew', password: 'changeme', displayName: 'Andrew', role: 'admin' });
+  UserModel.create({ username: 'rebecca', password: 'changeme', displayName: 'Rebecca', role: 'editor' });
+  UserModel.create({ username: 'maryann', password: 'changeme', displayName: 'Maryann', role: 'editor' });
+  console.log('Seed: 3 users created (change passwords after first login)');
+}
 
 app.listen(PORT, () => {
   console.log(`Backend running on http://localhost:${PORT}`);
