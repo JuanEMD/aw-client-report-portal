@@ -6,10 +6,12 @@ const ClientContext = createContext(null);
 export function ClientProvider({ children }) {
   const [clients, setClients] = useState([]);
   const [currentClient, setCurrentClient] = useState(null);
+  const [loaded, setLoaded] = useState(false);
 
   const loadClients = useCallback(async () => {
     const data = await api.clients.list();
     setClients(data);
+    setLoaded(true);
   }, []);
 
   const loadClient = useCallback(async (id) => {
@@ -35,7 +37,7 @@ export function ClientProvider({ children }) {
   }, []);
 
   return (
-    <ClientContext.Provider value={{ clients, currentClient, loadClients, loadClient, saveClient, removeClient }}>
+    <ClientContext.Provider value={{ clients, currentClient, loaded, loadClients, loadClient, saveClient, removeClient }}>
       {children}
     </ClientContext.Provider>
   );

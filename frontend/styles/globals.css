@@ -126,6 +126,40 @@ body {
   gap: 1rem;
 }
 
+.client-list--empty .client-list__header {
+  display: none;
+}
+
+.client-list__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+.client-list__empty-icon {
+  margin-bottom: 1.25rem;
+  opacity: 0.35;
+}
+
+.client-list__empty-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 0.5rem;
+}
+
+.client-list__empty-text {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  max-width: 280px;
+  margin: 0;
+  color: #9ca3af;
+}
+
 /* Client Card */
 .client-card {
   background: #fff;
