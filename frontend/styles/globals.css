@@ -610,6 +610,32 @@ select.input {
   margin: 0.25rem 0;
 }
 
+.tcc-diagram {
+  margin: 1rem 0;
+}
+
+.tcc-diagram {
+  background: #fff;
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.tcc-diagram__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.tcc-diagram canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 0 auto;
+}
+
 /* Report Preview */
 .report-preview {
   margin: 1rem 0;

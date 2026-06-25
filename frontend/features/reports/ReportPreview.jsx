@@ -1,5 +1,6 @@
 import SACSView from './SACSView';
 import TCCView from './TCCView';
+import TCCDiagram from './TCCDiagram';
 import CalculationsSummary from './CalculationsSummary';
 import Button from '../../components/Button';
 import { api } from '../../lib/api';
@@ -23,6 +24,7 @@ export default function ReportPreview({ report, client, sacs, tcc }) {
       <CalculationsSummary client={client} sacs={sacs} tcc={tcc} />
       <SACSView data={sacs} client={client} />
       <TCCView data={tcc} client={client} />
+      <TCCDiagram client={client} tcc={tcc} />
     </div>
   );
 }
