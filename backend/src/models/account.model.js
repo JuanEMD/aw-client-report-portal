@@ -14,12 +14,12 @@ const AccountModel = {
   create(data) {
     const result = db.prepare(`
       INSERT INTO accounts (client_id, owner, category, account_last4,
-        balance, cash_balance, interest_rate, property_address)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        balance, cash_balance, interest_rate, property_address, type)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       data.client_id, data.owner, data.category,
       data.account_last4 || '', data.balance || 0, data.cash_balance || 0,
-      data.interest_rate || 0, data.property_address || ''
+      data.interest_rate || 0, data.property_address || '', data.type || ''
     );
     return result.lastInsertRowid;
   },
@@ -28,12 +28,12 @@ const AccountModel = {
     db.prepare(`
       UPDATE accounts SET
         owner = ?, category = ?, account_last4 = ?,
-        balance = ?, cash_balance = ?, interest_rate = ?, property_address = ?
+        balance = ?, cash_balance = ?, interest_rate = ?, property_address = ?, type = ?
       WHERE id = ?
     `).run(
       data.owner, data.category, data.account_last4 || '',
       data.balance || 0, data.cash_balance || 0, data.interest_rate || 0,
-      data.property_address || '', id
+      data.property_address || '', data.type || '', id
     );
   },
 

@@ -23,11 +23,19 @@ export default function ClientForm({ defaultValues, onSubmit, onCancel }) {
         </fieldset>
 
         <fieldset className="client-form__section">
-          <legend>Financial Data</legend>
+          <legend>Financial Data — Client 1</legend>
           <Input label="Monthly salary (after tax)" name="monthly_salary" type="number" step="0.01" register={register} />
           <Input label="Monthly expense budget" name="expense_budget" type="number" step="0.01" register={register} />
           <Input label="Insurance deductibles (total)" name="insurance_deductibles" type="number" step="0.01" register={register} />
           <Input label="Private reserve target" name="private_reserve_target" type="number" step="0.01" register={register} />
+        </fieldset>
+
+        <fieldset className="client-form__section">
+          <legend>Financial Data — Client 2 (Spouse)</legend>
+          <Input label="Monthly salary (after tax)" name="spouse_monthly_salary" type="number" step="0.01" register={register} />
+          <Input label="Monthly expense budget" name="spouse_expense_budget" type="number" step="0.01" register={register} />
+          <Input label="Insurance deductibles (total)" name="spouse_insurance_deductibles" type="number" step="0.01" register={register} />
+          <Input label="Private reserve target" name="spouse_private_reserve_target" type="number" step="0.01" register={register} />
         </fieldset>
       </div>
 

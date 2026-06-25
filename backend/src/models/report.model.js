@@ -1,10 +1,13 @@
 const { db } = require('../config/database');
 
 const ACCOUNT_CATEGORIES = {
-  'retirement': 'retirement',
-  'non-retirement': 'non_retirement',
-  'joint': 'joint',
-  'trust': 'trust',
+  'IRA': 'retirement',
+  'Roth IRA': 'retirement',
+  '401K': 'retirement',
+  'Pension': 'retirement',
+  'Brokerage': 'non_retirement',
+  'Joint': 'joint',
+  'Trust': 'trust',
 };
 
 const ReportModel = {

@@ -81,8 +81,8 @@ function initialize() {
   `);
 
   // Migration: remove account_name, relax owner constraint
-  const info = db.prepare("SELECT COUNT(*) AS cnt FROM pragma_table_info('accounts') WHERE name = 'account_name'").get();
-  if (info.cnt > 0) {
+  const accNameCol = db.prepare("SELECT COUNT(*) AS cnt FROM pragma_table_info('accounts') WHERE name = 'account_name'").get();
+  if (accNameCol.cnt > 0) {
     db.exec(`
       CREATE TABLE IF NOT EXISTS accounts_new (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -104,6 +104,34 @@ function initialize() {
       ALTER TABLE accounts_new RENAME TO accounts;
     `);
     console.log('Migration: accounts table updated (removed account_name, owner uses names)');
+  }
+
+  // Migration: add spouse financial columns
+  const spouseSalaryCol = db.prepare("SELECT COUNT(*) AS cnt FROM pragma_table_info('clients') WHERE name = 'spouse_monthly_salary'").get();
+  if (spouseSalaryCol.cnt === 0) {
+    db.exec(`
+      ALTER TABLE clients ADD COLUMN spouse_monthly_salary REAL DEFAULT 0;
+      ALTER TABLE clients ADD COLUMN spouse_expense_budget REAL DEFAULT 0;
+      ALTER TABLE clients ADD COLUMN spouse_private_reserve_target REAL DEFAULT 0;
+      ALTER TABLE clients ADD COLUMN spouse_insurance_deductibles REAL DEFAULT 0;
+    `);
+    console.log('Migration: added spouse financial columns to clients table');
+  }
+
+  // Migration: add type column to accounts
+  const accTypeCol = db.prepare("SELECT COUNT(*) AS cnt FROM pragma_table_info('accounts') WHERE name = 'type'").get();
+  if (accTypeCol.cnt === 0) {
+    db.exec(`
+      ALTER TABLE accounts ADD COLUMN type TEXT DEFAULT '';
+      UPDATE accounts SET type = CASE category
+        WHEN 'retirement' THEN 'IRA'
+        WHEN 'non_retirement' THEN 'Brokerage'
+        WHEN 'trust' THEN 'Trust'
+        WHEN 'liability' THEN 'Other'
+        ELSE ''
+      END WHERE type = '';
+    `);
+    console.log('Migration: added type column to accounts table');
   }
 }
 

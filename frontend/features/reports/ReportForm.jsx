@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
+import ConfirmModal from '../../components/ConfirmModal';
 
-const ACCOUNT_TYPES = ['retirement', 'non-retirement', 'joint', 'trust'];
+const ACCOUNT_TYPES = ['IRA', 'Roth IRA', '401K', 'Pension', 'Brokerage', 'Joint', 'Trust']; const LIABILITY_TYPES = ['Mortgage', 'Auto Loan', 'Student Loan', 'Credit Card', 'Other'];
 
 function getAge(dob) {
   if (!dob) return '';
@@ -16,33 +17,54 @@ function getAge(dob) {
 }
 
 function emptyAcc() {
-  return { last4: '', type: 'retirement', current_amount: '', amount_to_invest: '' };
+  return { last4: '', type: 'IRA', current_amount: '', amount_to_invest: '', address: '' };
 }
 
 function dbToFormEntry(acc, client) {
-  let type = 'non-retirement';
-  if (acc.category === 'retirement') type = 'retirement';
-  else if (acc.owner === 'Joint') type = 'joint';
-  else if (acc.category === 'trust') type = 'trust';
-
   return {
     id: `db_${acc.id}`,
     dbId: acc.id,
     last4: acc.account_last4 || '',
-    type,
+    type: acc.type || 'Brokerage',
     current_amount: acc.balance || 0,
     amount_to_invest: 0,
+    address: acc.property_address || '',
   };
 }
 
-export default function ReportForm({ client, accounts: _unused, onSubmit, calculated, existingAccounts, existingLiabilities, clientId, onSaveAccount, onSaveLiability }) {
-  const { register, handleSubmit, watch } = useForm();
-  const [deductibles, setDeductibles] = useState([]);
+function calcDefault(client) {
+  const c1Salary = Number(client.monthly_salary) || 0;
+  const c2Salary = Number(client.spouse_monthly_salary) || 0;
+  const c1Budget = Number(client.expense_budget) || 0;
+  const c2Budget = Number(client.spouse_expense_budget) || 0;
+  const c1Reserve = Number(client.private_reserve_target) || 0;
+  const c2Reserve = Number(client.spouse_private_reserve_target) || 0;
+  return {
+    inflow: c1Salary + c2Salary,
+    outflow: c1Budget + c2Budget,
+    private_reserve_balance: c1Reserve + c2Reserve,
+  };
+}
+
+function calcDeductibles(client) {
+    const list = [];
+    const c1 = Number(client.insurance_deductibles) || 0;
+    const c2 = Number(client.spouse_insurance_deductibles) || 0;
+    if (c1 > 0) list.push({ id: 'ded_c1', name: client.full_name, amount: String(c1) });
+    if (c2 > 0 && client.spouse_name) list.push({ id: 'ded_c2', name: client.spouse_name, amount: String(c2) });
+    if (list.length === 0 && (c1 > 0 || c2 > 0)) list.push({ id: 'ded_default', name: 'Insurance deductibles', amount: String(c1 + c2) });
+    return list;
+  }
+
+export default function ReportForm({ client, accounts: _unused, onSubmit, calculated, existingAccounts, existingLiabilities, clientId, onSaveAccount, onDeleteAccount }) {
+  const { register, handleSubmit, watch } = useForm({ defaultValues: calcDefault(client) });
+  const [deductibles, setDeductibles] = useState(() => calcDeductibles(client));
   const [liabilities, setLiabilities] = useState([]);
   const [tccAccountsC1, setTccAccountsC1] = useState([]);
   const [tccAccountsC2, setTccAccountsC2] = useState([]);
   const [formC1, setFormC1] = useState({ open: false, data: emptyAcc(), editing: null });
   const [formC2, setFormC2] = useState({ open: false, data: emptyAcc(), editing: null });
+  const [confirm, setConfirm] = useState(null);
   const initialized = useRef(false);
 
   useEffect(() => {
@@ -72,9 +94,9 @@ export default function ReportForm({ client, accounts: _unused, onSubmit, calcul
     initialized.current = true;
   }, [existingAccounts]);
 
-  const inflow = watch('inflow') || 0;
-  const outflow = watch('outflow') || 0;
-  const excess = Number(inflow) - Number(outflow);
+  const inflow = Number(watch('inflow') || 0);
+  const outflow = Number(watch('outflow') || 0);
+  const excess = inflow - outflow;
 
   const totalDeductibles = deductibles.reduce((s, d) => s + (Number(d.amount) || 0), 0);
   const ficaBalance = (Number(outflow) * 6) + totalDeductibles;
@@ -127,19 +149,19 @@ export default function ReportForm({ client, accounts: _unused, onSubmit, calcul
     setter((prev) => ({ ...prev, data: { ...prev.data, [field]: value } }));
   };
 
-  const saveAccount = async (owner) => {
+  const executeSave = async (owner) => {
     const form = owner === 'c1' ? formC1 : formC2;
     const { data, editing } = form;
-    if (!data.last4 && !data.current_amount) return;
-
     const entry = {
       ...data,
       current_amount: Number(data.current_amount) || 0,
       amount_to_invest: Number(data.amount_to_invest) || 0,
     };
 
-    let dbId;
-    if (!editing && onSaveAccount) {
+    let dbId = data.dbId;
+    if (editing && dbId && onSaveAccount) {
+      await onSaveAccount(owner, entry, dbId);
+    } else if (!editing && onSaveAccount) {
       try {
         const saved = await onSaveAccount(owner, entry);
         if (saved?.id) dbId = saved.id;
@@ -158,12 +180,57 @@ export default function ReportForm({ client, accounts: _unused, onSubmit, calcul
     closeForm(owner);
   };
 
-  const removeAccount = (owner, id) => {
+  const saveAccount = (owner) => {
+    const form = owner === 'c1' ? formC1 : formC2;
+    const { data } = form;
+    if (!data.last4 && !data.current_amount) return;
+
+    if (data.dbId) {
+      setConfirm({
+        type: 'edit',
+        owner,
+        message: `Save changes to ${data.type} account${data.last4 ? ` (****${data.last4})` : ''}?`,
+      });
+    } else {
+      executeSave(owner);
+    }
+  };
+
+  const executeDelete = useCallback((owner, id, dbId) => {
+    if (dbId && onDeleteAccount) onDeleteAccount(dbId);
     const setter = owner === 'c1' ? setTccAccountsC1 : setTccAccountsC2;
     setter((prev) => prev.filter((a) => a.id !== id));
+  }, [onDeleteAccount]);
+
+  const removeAccount = (owner, id) => {
+    const accounts = owner === 'c1' ? tccAccountsC1 : tccAccountsC2;
+    const acc = accounts.find((a) => a.id === id);
+    if (!acc) return;
+    if (acc.dbId) {
+      setConfirm({
+        type: 'delete',
+        owner,
+        id,
+        dbId: acc.dbId,
+        message: `Delete ${acc.type} account${acc.last4 ? ` (****${acc.last4})` : ''}?`,
+      });
+    } else {
+      executeDelete(owner, id);
+    }
+  };
+
+  const handleConfirm = () => {
+    if (!confirm) return;
+    if (confirm.type === 'edit') {
+      executeSave(confirm.owner);
+    } else if (confirm.type === 'delete') {
+      executeDelete(confirm.owner, confirm.id, confirm.dbId);
+    }
+    setConfirm(null);
   };
 
   const onFormSubmit = (data) => {
+    data.inflow = inflow;
     data.deductibles = JSON.stringify(deductibles);
     data.fica_account_balance = ficaBalance;
     data.liabilities = JSON.stringify(liabilities);
@@ -197,6 +264,9 @@ export default function ReportForm({ client, accounts: _unused, onSubmit, calcul
               <span className="tcc-block__acc-type">{acc.type}</span>
               <span className="tcc-block__acc-amount">${(acc.current_amount || 0).toLocaleString()}</span>
               <span className="tcc-block__acc-invest">Invest: ${(acc.amount_to_invest || 0).toLocaleString()}</span>
+              {acc.type === 'Trust' && acc.address && (
+                <span className="tcc-block__acc-address">{acc.address}</span>
+              )}
               <button type="button" className="button button--small button--danger"
                 onClick={(e) => { e.stopPropagation(); removeAccount(owner, acc.id); }}>&times;</button>
             </div>
@@ -253,22 +323,10 @@ export default function ReportForm({ client, accounts: _unused, onSubmit, calcul
       <fieldset className="report-form__section">
         <legend>SACS — Cashflow</legend>
 
-        <Input label="Inflow (monthly)" name="inflow" type="number" step="0.01"
-          placeholder={client.monthly_salary} register={register} />
-
-        <Input label="Floor" name="floor" type="number" step="0.01"
-          placeholder="Amount extracted from inflow to private reserve" register={register} />
-
-        <Input label="Outflow (monthly expense budget)" name="outflow" type="number" step="0.01"
-          placeholder={client.expense_budget} register={register} />
-
-        <div className="report-form__calculated">
-          Excess: ${excess.toFixed(2)}
-        </div>
-
-        <div className="report-form__static">
-          Private reserve
-        </div>
+        <Input label={`${client.full_name} — Monthly Inflow`} name="inflow" type="number" step="0.01" register={register} />
+        <Input label="Monthly Outflow" name="outflow" type="number" step="0.01" register={register} />
+        <Input label="Private Reserve Balance" name="private_reserve_balance" type="number" step="0.01" register={register} />
+        <Input label="Floor" name="floor" type="number" step="0.01" register={register} />
 
         <div className="report-form__deductibles">
           <label className="report-form__label">Deductibles</label>
@@ -336,6 +394,16 @@ export default function ReportForm({ client, accounts: _unused, onSubmit, calcul
       )}
 
       <Button type="submit" variant="primary">Save & Calculate</Button>
+
+      <ConfirmModal
+        open={!!confirm}
+        title={confirm?.type === 'delete' ? 'Delete Account' : 'Save Changes'}
+        message={confirm?.message || ''}
+        confirmLabel={confirm?.type === 'delete' ? 'Delete' : 'Save'}
+        variant={confirm?.type === 'delete' ? 'danger' : 'primary'}
+        onConfirm={handleConfirm}
+        onCancel={() => setConfirm(null)}
+      />
     </form>
   );
 }

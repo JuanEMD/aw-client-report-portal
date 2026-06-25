@@ -64,27 +64,42 @@ export default function NewReportPage() {
     loadClients();
   };
 
-  const handleSaveAccount = async (owner, data) => {
+  const handleSaveAccount = async (owner, data, accountId) => {
     const isC1 = owner === 'c1';
     let ownerVal = isC1 ? 'client_1' : 'client_2';
     let category = 'non_retirement';
 
-    if (data.type === 'retirement') category = 'retirement';
-    else if (data.type === 'joint') { category = 'non_retirement'; ownerVal = 'Joint'; }
-    else if (data.type === 'trust') category = 'trust';
+    if (['IRA','Roth IRA','401K','Pension'].includes(data.type)) category = 'retirement';
+    else if (data.type === 'Joint') { category = 'non_retirement'; ownerVal = 'Joint'; }
+    else if (data.type === 'Trust') category = 'trust';
     if (ownerVal !== 'Joint') {
       ownerVal = isC1 ? currentClient.full_name : currentClient.spouse_name;
     }
 
-    const created = await api.accounts.create(id, {
+    const payload = {
       owner: ownerVal,
       category,
+      type: data.type || '',
       account_last4: data.last4 || '',
       balance: Number(data.current_amount) || 0,
-    });
+      property_address: data.address || '',
+    };
 
+    if (accountId) {
+      await api.accounts.update(accountId, payload);
+      const updated = await api.accounts.list(id);
+      setAccounts(updated);
+      return;
+    }
+
+    const created = await api.accounts.create(id, payload);
     setAccounts((prev) => [...prev, created]);
     return created;
+  };
+
+  const handleDeleteAccount = async (accountId) => {
+    await api.accounts.delete(accountId);
+    setAccounts((prev) => prev.filter((a) => a.id !== accountId));
   };
 
   const handleGenerate = async () => {
@@ -104,6 +119,7 @@ export default function NewReportPage() {
         existingLiabilities={liabilityAccounts}
         clientId={id}
         onSaveAccount={handleSaveAccount}
+        onDeleteAccount={handleDeleteAccount}
         onSubmit={handleSubmit}
       />
       <CalculationsSummary client={currentClient} sacs={calculated?.sacs} tcc={calculated?.tcc} />

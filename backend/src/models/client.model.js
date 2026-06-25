@@ -18,13 +18,16 @@ const ClientModel = {
   create(data) {
     const result = db.prepare(`
       INSERT INTO clients (full_name, spouse_name, dob, spouse_dob, ssn_last4, spouse_ssn_last4,
-        monthly_salary, expense_budget, private_reserve_target, insurance_deductibles, notes)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        monthly_salary, expense_budget, private_reserve_target, insurance_deductibles,
+        spouse_monthly_salary, spouse_expense_budget, spouse_private_reserve_target, spouse_insurance_deductibles, notes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       data.full_name, data.spouse_name || '', data.dob || null, data.spouse_dob || null,
       data.ssn_last4 || '', data.spouse_ssn_last4 || '', data.monthly_salary || 0,
       data.expense_budget || 0, data.private_reserve_target || 0,
-      data.insurance_deductibles || 0, data.notes || ''
+      data.insurance_deductibles || 0,
+      data.spouse_monthly_salary || 0, data.spouse_expense_budget || 0,
+      data.spouse_private_reserve_target || 0, data.spouse_insurance_deductibles || 0, data.notes || ''
     );
     return result.lastInsertRowid;
   },
@@ -35,13 +38,18 @@ const ClientModel = {
         full_name = ?, spouse_name = ?, dob = ?, spouse_dob = ?,
         ssn_last4 = ?, spouse_ssn_last4 = ?, monthly_salary = ?,
         expense_budget = ?, private_reserve_target = ?, insurance_deductibles = ?,
+        spouse_monthly_salary = ?, spouse_expense_budget = ?,
+        spouse_private_reserve_target = ?, spouse_insurance_deductibles = ?,
         notes = ?, updated_at = datetime('now')
       WHERE id = ?
     `).run(
       data.full_name, data.spouse_name || '', data.dob || null, data.spouse_dob || null,
       data.ssn_last4 || '', data.spouse_ssn_last4 || '', data.monthly_salary || 0,
       data.expense_budget || 0, data.private_reserve_target || 0,
-      data.insurance_deductibles || 0, data.notes || '', id
+      data.insurance_deductibles || 0,
+      data.spouse_monthly_salary || 0, data.spouse_expense_budget || 0,
+      data.spouse_private_reserve_target || 0, data.spouse_insurance_deductibles || 0,
+      data.notes || '', id
     );
   },
 

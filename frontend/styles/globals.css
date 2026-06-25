@@ -530,42 +530,24 @@ select.input {
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
-.sacs-view__diagram {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.sacs-view__bubble {
-  width: 240px;
-  padding: 1.25rem;
-  border-radius: 50%;
-  text-align: center;
-  color: #fff;
-}
-
-.sacs-view__bubble--inflow { background: #16a34a; }
-.sacs-view__bubble--outflow { background: #dc2626; }
-.sacs-view__bubble--reserve { background: #2563eb; }
-
-.sacs-view__label {
-  display: block;
-  font-size: 0.8rem;
-  opacity: 0.9;
-}
-
-.sacs-view__amount {
-  display: block;
-  font-size: 1.25rem;
+.sacs-view__title {
+  font-size: 1.1rem;
   font-weight: 700;
-  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
 }
 
-.sacs-view__arrow {
-  font-size: 1.5rem;
+.sacs-view__client {
+  font-size: 0.9rem;
   color: #64748b;
+  margin-bottom: 0.5rem;
+}
+
+.sacs-view canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 0 auto;
 }
 
 /* TCC View */
@@ -728,3 +710,11 @@ select.input {
   padding: 1rem 1.5rem;
   border-top: 1px solid #e2e8f0;
 }
+
+.confirm-modal__message {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #334155;
+}
+
+
