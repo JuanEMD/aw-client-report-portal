@@ -4,6 +4,7 @@ import { useClients } from '../../../context/ClientContext';
 import { api } from '../../../lib/api';
 import ClientForm from '../../../features/clients/ClientForm';
 import Button from '../../../components/Button';
+import Modal from '../../../components/Modal';
 import Link from 'next/link';
 
 export default function ClientDetailPage() {
@@ -27,18 +28,6 @@ export default function ClientDetailPage() {
   };
 
   if (!currentClient) return <div className="loading">Loading...</div>;
-
-  if (editing) {
-    return (
-      <div className="page-client">
-        <ClientForm
-          defaultValues={currentClient}
-          onSubmit={handleUpdate}
-          onCancel={() => setEditing(false)}
-        />
-      </div>
-    );
-  }
 
   const fmt = (v) => (v || 0).toLocaleString();
 
@@ -109,6 +98,16 @@ export default function ClientDetailPage() {
           </Link>
         </div>
       </div>
+
+      {editing && (
+        <Modal title="Edit Client" onClose={() => setEditing(false)}>
+          <ClientForm
+            defaultValues={currentClient}
+            onSubmit={handleUpdate}
+            onCancel={() => setEditing(false)}
+          />
+        </Modal>
+      )}
     </div>
   );
 }
