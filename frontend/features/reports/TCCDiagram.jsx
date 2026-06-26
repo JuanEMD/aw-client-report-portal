@@ -456,13 +456,14 @@ export default function TCCDiagram({ client, tcc }) {
     const c = ref.current;
     if (!c) return;
     const dpr = window.devicePixelRatio || 1;
+    const S = 1.4;
     const lay = layout(tcc);
-    c.width = lay.w * dpr;
-    c.height = lay.h * dpr;
-    c.style.width = lay.w + 'px';
-    c.style.height = lay.h + 'px';
+    c.width = lay.w * dpr * S;
+    c.height = lay.h * dpr * S;
+    c.style.width = lay.w * S + 'px';
+    c.style.height = lay.h * S + 'px';
     const ctx = c.getContext('2d');
-    ctx.scale(dpr, dpr);
+    ctx.scale(dpr * S, dpr * S);
     draw(ctx, lay, client, tcc);
   }, [client, tcc]);
 
