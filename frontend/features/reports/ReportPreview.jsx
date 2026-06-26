@@ -58,6 +58,23 @@ export default function ReportPreview({ report, client, sacs, tcc }) {
     pdf.save(`Report_Q${report.quarter}_${report.year}.pdf`);
   }, [report]);
 
+  const handleExportDiagrams = useCallback(() => {
+    const el = reportRef.current;
+    if (!el) return;
+
+    const drawPNG = (sel, name) => {
+      const canvas = el.querySelector(`${sel} canvas`);
+      if (!canvas) return;
+      const link = document.createElement('a');
+      link.download = name;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    };
+
+    drawPNG('.sacs-view', `SACS_${report.quarter}_${report.year}.png`);
+    drawPNG('.tcc-diagram', `TCC_${report.quarter}_${report.year}.png`);
+  }, [report]);
+
   return (
     <div className="report-preview">
       <h2 className="report-preview__title">
@@ -66,6 +83,7 @@ export default function ReportPreview({ report, client, sacs, tcc }) {
 
       <div className="report-preview__actions">
         <Button onClick={handleExportPDF}>Export Full Report (PDF)</Button>
+        <Button onClick={handleExportDiagrams}>Export Diagrams (PNG)</Button>
       </div>
 
       <div ref={reportRef}>
