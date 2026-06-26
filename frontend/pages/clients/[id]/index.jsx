@@ -28,43 +28,87 @@ export default function ClientDetailPage() {
 
   if (!currentClient) return <div className="loading">Loading...</div>;
 
-  return (
-    <div className="page-client">
-      {editing ? (
+  if (editing) {
+    return (
+      <div className="page-client">
         <ClientForm
           defaultValues={currentClient}
           onSubmit={handleUpdate}
           onCancel={() => setEditing(false)}
         />
-      ) : (
-        <>
-          <div className="page-client__header">
-            <h2>{currentClient.full_name}</h2>
-            {currentClient.spouse_name && <p>Spouse: {currentClient.spouse_name}</p>}
+      </div>
+    );
+  }
+
+  const fmt = (v) => (v || 0).toLocaleString();
+
+  return (
+    <div className="page-client">
+      <div className="client-detail__card">
+        <div className="client-detail__accent" />
+        <div className="client-detail__card-body">
+          <div className="client-detail__hd">
+            <div className="client-detail__hd-info">
+              <h1 className="client-detail__name">{currentClient.full_name}</h1>
+              {currentClient.spouse_name && (
+                <p className="client-detail__spouse">Spouse: {currentClient.spouse_name}</p>
+              )}
+            </div>
             <Button variant="secondary" onClick={() => setEditing(true)}>Edit</Button>
           </div>
-
-          <div className="page-client__accounts">
-            <h3>Accounts</h3>
-            {accounts.length === 0 && <p>No accounts yet</p>}
-            {accounts.map((acc) => (
-              <div key={acc.id} className="account-row">
-                <span>{acc.account_name}</span>
-                <span>{acc.category}</span>
-                <span>{acc.owner}</span>
-                <span>${Number(acc.balance).toLocaleString()}</span>
-              </div>
-            ))}
+          <div className="client-detail__meta-row">
+            <span className="client-detail__meta">
+              DOB: {currentClient.dob ? new Date(currentClient.dob).toLocaleDateString() : '—'}
+            </span>
+            <span className="client-detail__sep">·</span>
+            <span className="client-detail__meta">
+              SSN: {currentClient.ssn_last4 ? `****${currentClient.ssn_last4}` : '—'}
+            </span>
           </div>
+        </div>
+      </div>
 
-          <div className="page-client__reports">
-            <h3>Reports</h3>
-            <Link href={`/clients/${id}/reports/new`}>
-              <Button variant="primary">New Report</Button>
-            </Link>
+      <div className="client-detail__section">
+        <div className="client-detail__section-bar" />
+        <div className="client-detail__section-body">
+          <div className="client-detail__section-hd">
+            <h2 className="client-detail__section-title">Accounts</h2>
+            <span className="client-detail__count">{accounts.length}</span>
           </div>
-        </>
-      )}
+          {accounts.length === 0 ? (
+            <p className="client-detail__empty">No accounts yet. Create a report to add accounts.</p>
+          ) : (
+            <div className="client-detail__rows">
+              {accounts.map((acc) => (
+                <div key={acc.id} className="client-detail__row">
+                  <div className="client-detail__row-info">
+                    <span className="client-detail__row-name">{acc.type || acc.account_name || '—'}</span>
+                    <span className={`client-detail__row-cat client-detail__cat--${acc.category || 'other'}`}>
+                      {acc.category}
+                    </span>
+                  </div>
+                  <div className="client-detail__row-right">
+                    <span className="client-detail__row-owner">{acc.owner}</span>
+                    <span className="client-detail__row-balance">${fmt(acc.balance)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="client-detail__section">
+        <div className="client-detail__section-bar" />
+        <div className="client-detail__section-body">
+          <div className="client-detail__section-hd">
+            <h2 className="client-detail__section-title">Reports</h2>
+          </div>
+          <Link href={`/clients/${id}/reports/new`}>
+            <Button variant="primary">New Report</Button>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
