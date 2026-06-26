@@ -8,6 +8,7 @@ import Button from '../../components/Button';
 export default function ClientsPage() {
   const { saveClient } = useClients();
   const [showForm, setShowForm] = useState(false);
+  const [search, setSearch] = useState('');
 
   const handleCreate = async (data) => {
     await saveClient(data);
@@ -16,7 +17,21 @@ export default function ClientsPage() {
 
   return (
     <div className="page-clients">
-      <div className="page-clients__toolbar">
+      <div className="page-clients__hd">
+        <h1 className="page-clients__title">Clients</h1>
+        <div className="page-clients__search">
+          <svg className="page-clients__search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+            <circle cx="7" cy="7" r="5" />
+            <path d="M11 11l3 3" />
+          </svg>
+          <input
+            className="page-clients__search-input"
+            type="text"
+            placeholder="Search clients..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
         <Button variant="primary" onClick={() => setShowForm(true)}>
           New Client
         </Button>
@@ -28,7 +43,7 @@ export default function ClientsPage() {
         </Modal>
       )}
 
-      <ClientList />
+      <ClientList search={search} />
     </div>
   );
 }

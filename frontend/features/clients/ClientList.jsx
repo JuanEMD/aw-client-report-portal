@@ -1,14 +1,23 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useClients } from '../../context/ClientContext';
 import ClientCard from './ClientCard';
 import Loading from '../../components/Loading';
 
-export default function ClientList() {
+export default function ClientList({ search }) {
   const { clients, loaded, loadClients, removeClient } = useClients();
 
   useEffect(() => {
     loadClients();
   }, [loadClients]);
+
+  const filtered = useMemo(() => {
+    if (!search) return clients;
+    const q = search.toLowerCase();
+    return clients.filter(c =>
+      c.full_name?.toLowerCase().includes(q) ||
+      c.spouse_name?.toLowerCase().includes(q)
+    );
+  }, [clients, search]);
 
   if (!loaded) return <Loading />;
 
@@ -33,14 +42,17 @@ export default function ClientList() {
 
   return (
     <div className="client-list">
-      <div className="client-list__header">
-        <h2 className="client-list__title">Clients</h2>
-      </div>
-      <div className="client-list__grid">
-        {clients.map((client) => (
-          <ClientCard key={client.id} client={client} onDelete={removeClient} />
-        ))}
-      </div>
+      {filtered.length === 0 ? (
+        <div className="client-list__empty">
+          <p className="client-list__empty-text">No clients match your search.</p>
+        </div>
+      ) : (
+        <div className="client-list__grid">
+          {filtered.map((client) => (
+            <ClientCard key={client.id} client={client} onDelete={removeClient} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
